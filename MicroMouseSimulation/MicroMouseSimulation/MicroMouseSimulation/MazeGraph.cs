@@ -106,6 +106,10 @@ namespace MicroMouseSimulation
 
                     while (tempEdge.Next != null)
                     {
+                        if(tempEdge.Target.Location == connectedLocation) // already in edgelist
+                        {
+                            return;
+                        }
                         tempEdge = tempEdge.Next;
                     }
 

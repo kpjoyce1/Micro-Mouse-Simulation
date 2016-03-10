@@ -37,15 +37,15 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="test.png">
-      <Name>test</Name>
+    <Compile Include="All-Japan-Micromouse-2015-Qualifier-Maze.png">
+      <Name>Maze</Name>
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="All-Japan-Micromouse-2015-Qualifier-Maze.png">
-      <Name>Maze</Name>
+    <Compile Include="Greedy_Mouse.png">
+      <Name>MataMouse</Name>
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
     </Compile>

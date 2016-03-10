@@ -10,9 +10,9 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
 
-namespace MicroMouseSimulation
+namespace MicroMouseSimulation 
 {
-    class Bot
+    class Bot : AnimatedSprite
     {
         enum Status
         {
@@ -23,22 +23,6 @@ namespace MicroMouseSimulation
         }
 
         private Status _status;
-
-        private Texture2D _texture;
-
-        public Texture2D Texture
-        {
-            get { return _texture; }
-            set { _texture = value; }
-        }
-
-        private Vector2 _position;
-
-        public Vector2 Position
-        {
-            get { return _position; }
-            set { _position = value; }
-        }
 
         private Vector2 _velocity;
 
@@ -97,148 +81,223 @@ namespace MicroMouseSimulation
         }
 
 
-        public Bot(Texture2D image, Vector2 position, int width, int height, Color tint)        
+        public Bot(Texture2D image, Vector2 position, Color tint,
+                    float rotation, Vector2 origin, Vector2 scale)
+            : base(image, position, tint, rotation, origin, scale)        
         {
-            _texture = image;
-            _position = position;
-            _color = tint;
-            _width = width;
-            _height = height;
             _status = Status.Scanning;
+            _direction = Direction.Down;
             _mazeData = new MazeGraph();
+
+            _layer = 0.01f;
         }
 
+        //actual movement blocked
         bool rightBlocked;
         bool leftBlocked;
         bool topBlocked;
         bool bottomBlocked;
 
-        public void Update(KeyboardState ks, KeyboardState lastks, Color[,] PixelMap)
+        bool rightWall;
+        bool leftWall;
+        bool topWall;
+        bool bottomWall;
+
+        public void Update(GameTime gameTime, KeyboardState ks, KeyboardState lastks, Color[,] PixelMap)
         {
+            base.Update(gameTime);
+
+            _width = _frame.Width;
+            _height = _frame.Height;
+
+            _origin = new Vector2(_width / 2, _height / 2);
+
             // 7,7  7,8 8,7 8,8 are considered the center
             PixelDetect(PixelMap);
-            
+
             //MazePosition is relative coordinate system
-            _mazePosition = new Vector2((int)((_position.X - (int)(_position.X / Game1.MapUnit)*8f) / Game1.MapUnit), (int)(_position.Y - (int)(_position.Y / Game1.MapUnit) * 8f) / Game1.MapUnit);
+            _mazePosition = new Vector2((int)((_position.X - (int)(_position.X / Game1.MapUnit) * 8f) / Game1.MapUnit), (int)(_position.Y - (int)(_position.Y / Game1.MapUnit) * 8f) / Game1.MapUnit);
 
-
-
-            if (_status == Status.Scanning)
+            
+            //Added Edges to graph
+            if (!rightWall)
             {
-                //Added Edges to graph
-                if (!rightBlocked)
-                {
-                    _mazeData.AddEdge(_mazePosition, _mazePosition + new Vector2(1, 0));
-                }
-
-                if (!leftBlocked)
-                {
-                    _mazeData.AddEdge(_mazePosition, _mazePosition - new Vector2(1, 0));
-                }
-
-                if (!topBlocked)
-                {
-                    _mazeData.AddEdge(_mazePosition, _mazePosition - new Vector2(0, 1));
-                }
-
-                if (!bottomBlocked)
-                {
-                    _mazeData.AddEdge(_mazePosition, _mazePosition + new Vector2(0, 1));
-                }
-
-                //Mark the node as visited
-                _mazeData.Visited(_mazePosition);
-                              
-
+                _mazeData.AddEdge(_mazePosition, _mazePosition + new Vector2(1, 0));
             }
-            else if (_status == Status.Calculating)
+
+            if (!leftWall)
             {
-                _shortestPath = _mazeData.shortestPath(Vector2.Zero, Vector2.One * 8f);
+                _mazeData.AddEdge(_mazePosition, _mazePosition - new Vector2(1, 0));
             }
+
+            if (!topWall)
+            {
+                _mazeData.AddEdge(_mazePosition, _mazePosition - new Vector2(0, 1));
+            }
+
+            if (!bottomWall)
+            {
+                _mazeData.AddEdge(_mazePosition, _mazePosition + new Vector2(0, 1));
+            }
+            
+            //Mark the node as visited
+            //_mazeData.Visited(_mazePosition);
+
+
+            if (ks.IsKeyDown(Keys.L) && lastks.IsKeyUp(Keys.L))
+            {
+                _shortestPath = _mazeData.shortestPath(Vector2.Zero, _mazePosition);
+            }
+
             //Keyboard movement
-            int movement = Game1.MapUnit + 8;                
+            int movement = (Game1.MapUnit + 8) / 60;
 
-            if (ks.IsKeyDown(Keys.Left) && lastks.IsKeyUp(Keys.Left) &&  !leftBlocked)
+            if (ks.IsKeyDown(Keys.Left) && !leftBlocked)
             {
                 _position.X -= movement;
+                if (_direction != Direction.Left)
+                {
+                    _direction = Direction.Left;
+                    _currentFrame = 0;
+                }
             }
-            else if (ks.IsKeyDown(Keys.Right) && lastks.IsKeyUp(Keys.Right) && !rightBlocked)
+            else if (ks.IsKeyDown(Keys.Right) && !rightBlocked)
             {
                 _position.X += movement;
+                if (_direction != Direction.Right)
+                {
+                    _direction = Direction.Right;
+                    _currentFrame = 0;
+                }
             }
-            else if (ks.IsKeyDown(Keys.Up) && lastks.IsKeyUp(Keys.Up) && !topBlocked)
+            else if (ks.IsKeyDown(Keys.Up) && !topBlocked)
             {
                 _position.Y -= movement;
+                if (_direction != Direction.Up)
+                {
+                    _direction = Direction.Up;
+                    _currentFrame = 0;
+                }
             }
-            else if (ks.IsKeyDown(Keys.Down) && lastks.IsKeyUp(Keys.Down) &&  !bottomBlocked)
+            else if (ks.IsKeyDown(Keys.Down) && !bottomBlocked)
             {
                 _position.Y += movement;
+                if (_direction != Direction.Down)
+                {
+                    _direction = Direction.Down;
+                    _currentFrame = 0;
+                }
             }
 
 
         }
 
-
-        public void Draw(SpriteBatch spriteBatch)
+        public override  void Draw(SpriteBatch spriteBatch)
         {
-            spriteBatch.Draw(_texture, _position, null, _color, 0f, Vector2.Zero, new  Vector2(_width, _height), SpriteEffects.None, 1f);
+            base.Draw(spriteBatch);
             _mazeData.Draw(spriteBatch);
-        }        
+        }
 
 
         public void PixelDetect(Color[,] PixelMap)
         {
-            int sensorDistance = Game1.MapUnit / 2;
+            int sensorDistance = Game1.MapUnit;
 
             leftBlocked = false;
             rightBlocked = false;
             topBlocked = false;
             bottomBlocked = false;
 
+            leftWall = false;
+            rightWall = false;
+            topWall = false;
+            bottomWall = false;
+
             for (int currDistance = 1; currDistance < sensorDistance; currDistance++) //simulate a sensor 
             {
-                if (_position.X - currDistance < 0)
+                if ((_position.X - _width / 2) - currDistance < 0)
                 {
-                    leftBlocked = true;
-                }
-                else if (_position.X + currDistance + _width >= Game1.MapWidth)
-                {
-                    rightBlocked = true;
-                }
-                else
-                {
-                    if (PixelMap[(int)_position.X - currDistance, (int)_position.Y].A != 0 || PixelMap[(int)_position.X - currDistance, (int)_position.Y + _height].A != 0)
+                    leftWall = true;
+                    if (currDistance < 3)
                     {
                         leftBlocked = true;
                     }
-                    if (PixelMap[(int)_position.X + _width + currDistance, (int)_position.Y].A != 0 || PixelMap[(int)_position.X + _width + currDistance, (int)_position.Y + _height].A != 0)
+                }
+                else
+                {
+                    if (PixelMap[(int)(_position.X - _width / 2) - currDistance, (int)(_position.Y)].A != 0 || PixelMap[(int)(_position.X - _width / 2) - currDistance, (int)(_position.Y - _height / 2)].A != 0 || PixelMap[(int)(_position.X - _width / 2) - currDistance, (int)(_position.Y + _height / 2)].A != 0)
+                    {
+                        leftWall = true;
+                        if (currDistance < 3)
+                        {
+                            leftBlocked = true;
+                        }
+                    }
+                }
+                
+                if ((_position.X + _width / 2) + currDistance >= Game1.MapWidth)
+                {
+                    rightWall = true;
+                    if (currDistance < 3)
                     {
                         rightBlocked = true;
                     }
                 }
-
-                if (_position.Y - currDistance < 0)
-                {
-                    topBlocked = true;
-                }
-                else if (_position.Y + currDistance + _height >= Game1.MapHeight)
-                {
-                    bottomBlocked = true;
-                }
                 else
                 {
-                    if (PixelMap[(int)_position.X, (int)_position.Y + _height + currDistance].A != 0 || PixelMap[(int)_position.X + _width, (int)_position.Y + _height + currDistance].A != 0)
+                    if (PixelMap[(int)(_position.X + _width / 2) + currDistance, (int)(_position.Y)].A != 0 || PixelMap[(int)(_position.X + _width / 2) + currDistance, (int)(_position.Y - _height / 2)].A != 0 || PixelMap[(int)(_position.X + _width / 2) + currDistance, (int)(_position.Y + _height / 2)].A != 0)
                     {
-                        bottomBlocked = true;
+                        rightWall = true;
+                        if (currDistance < 3)
+                        {
+                            rightBlocked = true;
+                        }
                     }
+                }            
 
-                    if (PixelMap[(int)_position.X, (int)_position.Y - currDistance].A != 0 || PixelMap[(int)_position.X + _width, (int)_position.Y - currDistance].A != 0)
+                if ((_position.Y - _height / 2) - currDistance < 0)
+                {
+                    if (currDistance < 3)
                     {
                         topBlocked = true;
                     }
+                    topWall = true;
                 }
+                else
+                {
+                    if (PixelMap[(int)(_position.X), (int)(_position.Y - _height / 2) - currDistance].A != 0 || PixelMap[(int)(_position.X - _width / 2), (int)(_position.Y - _height / 2) - currDistance].A != 0 || PixelMap[(int)(_position.X + _width / 2), (int)(_position.Y - _height / 2) - currDistance].A != 0)
+                    {
+                        topWall = true;
+                        if (currDistance < 3)
+                        {
+                            topBlocked = true;
+                        }
+                    }
+                }
+            
+                if ((_position.Y + _height / 2) + currDistance >= Game1.MapHeight)
+                {
+                    if (currDistance < 3)
+                    {
+                        bottomBlocked = true;
+                    }
+                    bottomWall = true;
+                }
+                else
+                {
+                    if (PixelMap[(int)(_position.X), (int)(_position.Y + _height / 2) + currDistance].A != 0 || PixelMap[(int)(_position.X - _width / 2), (int)(_position.Y + _height / 2) + currDistance].A != 0 || PixelMap[(int)(_position.X + _width / 2), (int)(_position.Y + _height / 2) + currDistance].A != 0)
+                    {
+                        bottomWall = true;
+                        if (currDistance < 3)
+                        {
+                            bottomBlocked = true;
+                        }
+                    }
+                }
+
             }
         }
+
 
     }
 }

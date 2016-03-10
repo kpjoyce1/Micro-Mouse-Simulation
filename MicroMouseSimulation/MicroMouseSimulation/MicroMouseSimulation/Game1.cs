@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
@@ -21,7 +22,7 @@ namespace MicroMouseSimulation
         Color[,] PixelMap;
         Color[] Colors;
 
-        Bot microMouse;
+        Bot mataMouse;
         KeyboardState ks, lastks;
 
         TimeSpan robotUpdate;
@@ -41,8 +42,11 @@ namespace MicroMouseSimulation
         protected override void Initialize()
         {           
             base.Initialize();
+            System.Windows.Forms.Form form = (System.Windows.Forms.Form)System.Windows.Forms.Control.FromHandle(this.Window.Handle);
+            form.Location = new System.Drawing.Point(0, 0);
+
         }
-        
+
         protected override void LoadContent()
         {
             
@@ -68,10 +72,35 @@ namespace MicroMouseSimulation
             
             pixel = new Texture2D(GraphicsDevice, 1, 1);
             pixel.SetData<Color>(new Color[] { Color.White });
+            Texture2D mouseTexture = Content.Load<Texture2D>("MataMouse");
+            mataMouse = new Bot(mouseTexture, new Vector2( 8 + 14 + 12, 8 + 14 + 13), Color.White, 0f, Vector2.Zero, Vector2.One);
 
-            microMouse = new Bot(pixel, new Vector2( 8 + 14, 8 + 14), 28, 28, Color.Red);
+            List<Rectangle> frontFrames = new List<Rectangle> { new Rectangle(12, 20, 24, 26),
+                                                           new Rectangle(60, 22, 24, 24),
+                                                           new Rectangle(108, 20, 24, 26),
+                                                           new Rectangle(156, 22 , 24, 24)};
+            mataMouse.LoadFrames(frontFrames, AnimatedSprite.Direction.Down,  4f);
 
-            graphics.PreferredBackBufferHeight = MazeTexture.Height;
+            List<Rectangle> backFrames = new List<Rectangle> { new Rectangle(12, 164, 24, 26),
+                                                           new Rectangle(60, 166, 24, 24),
+                                                           new Rectangle(108, 164, 24, 26),
+                                                           new Rectangle(156, 166 , 24, 24)};
+            mataMouse.LoadFrames(backFrames, AnimatedSprite.Direction.Up, 4f);
+
+            List<Rectangle> rightFrames = new List<Rectangle> { new Rectangle(4, 118, 38, 24),
+                                                           new Rectangle(54, 118, 38, 24),
+                                                           new Rectangle(100, 118, 38, 24),
+                                                           new Rectangle(150, 118 , 38, 24)};
+            mataMouse.LoadFrames(rightFrames, AnimatedSprite.Direction.Right, 4f);
+
+            List<Rectangle> leftFrames = new List<Rectangle> { new Rectangle(6, 70, 38, 24),
+                                                           new Rectangle(52, 70, 38, 24),
+                                                           new Rectangle(102, 70, 38, 24),
+                                                           new Rectangle(148, 70 , 38, 24)};
+            mataMouse.LoadFrames(leftFrames, AnimatedSprite.Direction.Left, 4f);
+
+
+            graphics.PreferredBackBufferHeight = MazeTexture.Height - 100;
             graphics.PreferredBackBufferWidth = MazeTexture.Width;
             graphics.ApplyChanges();
 
@@ -92,9 +121,9 @@ namespace MicroMouseSimulation
             ks = Keyboard.GetState();
 
             robotUpdate += gameTime.ElapsedGameTime;
-            if (robotUpdate > TimeSpan.FromSeconds(1))
+            if (robotUpdate > TimeSpan.FromMilliseconds(1))
             {
-                microMouse.Update(ks, lastks, PixelMap);
+                mataMouse.Update(gameTime, ks, lastks, PixelMap);
                 robotUpdate = TimeSpan.Zero;
             }
             base.Update(gameTime);
@@ -105,9 +134,9 @@ namespace MicroMouseSimulation
         {
             GraphicsDevice.Clear(Color.Black);
 
-            spriteBatch.Begin();
+            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend);
             spriteBatch.Draw(MazeTexture, Vector2.Zero, Color.White);
-            microMouse.Draw(spriteBatch);       
+            mataMouse.Draw(spriteBatch);       
             spriteBatch.End();
 
             base.Draw(gameTime);
