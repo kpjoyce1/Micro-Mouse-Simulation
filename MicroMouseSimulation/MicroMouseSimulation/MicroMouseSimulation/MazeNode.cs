@@ -62,13 +62,14 @@ namespace MicroMouseSimulation
             set { _mark = value; }
         }
 
-        private bool _visited;
+        private int _scanValue;
 
-        public bool Visited
+        public int ScanValue
         {
-            get { return _visited; }
-            set { _visited = value; }
+            get { return _scanValue; }
+            set { _scanValue = value; }
         }
+
 
         private Color _color;
 
@@ -89,7 +90,7 @@ namespace MicroMouseSimulation
 
         public void Draw(SpriteBatch spriteBatch)
         {                                    
-            spriteBatch.Draw(Game1.pixel, _location * Game1.MapUnit + _location * 8f + Vector2.One * (28 + 6), null, _color, 0f, Vector2.Zero, 4f, SpriteEffects.None, 1f);
+            spriteBatch.Draw(Game1.pixel, MazeGraph.toScreenCoordinates(_location), null, _color, 0f, Vector2.Zero, 4f, SpriteEffects.None, 1f);
 
             if (_edgeHead != null)
             {

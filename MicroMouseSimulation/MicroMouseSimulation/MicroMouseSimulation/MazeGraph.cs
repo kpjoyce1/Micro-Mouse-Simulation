@@ -34,15 +34,17 @@ namespace MicroMouseSimulation
         {
             _head = new MazeNode(new Vector2(0, 0));
             Size++;   
-            MazeNode current = _head;            
+            MazeNode current = _head;
+            _head.ScanValue = 14;
 
-            for(int x = 0; x < 16; x++)
+            for (int x = 0; x < 16; x++)
             {
                 for (int y = 0; y < 16; y++)
                 {
                     if (x != 0 || y != 0)
                     {
-                        MazeNode temp = new MazeNode(new Vector2(x, y));                        
+                        MazeNode temp = new MazeNode(new Vector2(x, y));
+                        temp.ScanValue = Math.Abs(7 - x) +  Math.Abs(7 - y);                   
                         while (current.Next != null)
                         {
                             current = current.Next;
@@ -82,9 +84,6 @@ namespace MicroMouseSimulation
                 }
                 current = current.Next;
             }
-            if (!current.Visited)
-            {
-
                 MazeNode connected = _head;
 
                 while (connected.Next != null)
@@ -116,24 +115,7 @@ namespace MicroMouseSimulation
                     tempEdge.Next = new MazeEdge(connected);
 
                 }
-            }
 
-        }
-
-        public void Visited(Vector2 location)
-        {
-            MazeNode current = _head;
-
-            while (current.Next != null)
-            {
-                if (current.Location == location)
-                {
-                    break;
-                }
-                current = current.Next;
-            }
-
-            current.Visited = true;
         }
 
 
@@ -214,22 +196,6 @@ namespace MicroMouseSimulation
 
         }
 
-        private bool allMarked()
-        {
-            MazeNode current = _head;
-            while(current.Next != null)
-            {
-                if(!current.Mark)
-                {
-                    return false;
-                }
-
-                current = current.Next;
-            }
-
-            return true;
-        }
-
         private MazeNode minDistance(List<MazeNode> list)
         {
 
@@ -244,8 +210,46 @@ namespace MicroMouseSimulation
 
             return minNode;
         }
+       
+        public Vector2 nextNodeInScan(Vector2 currentLocation)
+        {
+            MazeNode current = _head;
 
-        public void Draw(SpriteBatch spriteBatch)
+            while (current.Next != null)
+            {
+                if (current.Location == currentLocation)
+                {
+                    break;
+                }
+                current = current.Next;
+            }
+
+            MazeEdge edge = current.EdgeHead;
+
+            while(edge != null)
+            {
+                if(edge.Target.ScanValue <= current.ScanValue)
+                {
+                    return edge.Target.Location;
+                }
+                edge = edge.Next;
+            }
+
+            return Vector2.One * -1f;
+
+        }
+
+        public static Vector2 toMazeCoorinates(Vector2 Position)
+        {
+            return new Vector2((int)((Position.X - 8) / (Game1.MapUnit + 8)), (int)((Position.Y - 8) / (Game1.MapUnit + 8)));
+        }
+
+        public static Vector2 toScreenCoordinates(Vector2 Location)
+        {
+            return Location * Game1.MapUnit + Location * 8f + Vector2.One * (28 + 6);
+        }
+
+        public  void Draw(SpriteBatch spriteBatch)
         {
             MazeNode current = _head;
 

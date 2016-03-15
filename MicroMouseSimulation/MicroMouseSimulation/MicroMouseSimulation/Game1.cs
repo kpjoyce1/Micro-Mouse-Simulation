@@ -75,29 +75,29 @@ namespace MicroMouseSimulation
             Texture2D mouseTexture = Content.Load<Texture2D>("MataMouse");
             mataMouse = new Bot(mouseTexture, new Vector2( 8 + 14 + 12, 8 + 14 + 13), Color.White, 0f, Vector2.Zero, Vector2.One);
 
-            List<Rectangle> frontFrames = new List<Rectangle> { new Rectangle(12, 20, 24, 26),
-                                                           new Rectangle(60, 22, 24, 24),
-                                                           new Rectangle(108, 20, 24, 26),
-                                                           new Rectangle(156, 22 , 24, 24)};
-            mataMouse.LoadFrames(frontFrames, AnimatedSprite.Direction.Down,  4f);
+            List<Rectangle> frontFrames = new List<Rectangle> { new Rectangle(12, 20, 24, 24),
+                                                           new Rectangle(60, 22, 24, 22),
+                                                           new Rectangle(108, 20, 24, 24),
+                                                           new Rectangle(156, 22 , 24, 22)};
+            mataMouse.LoadFrames(frontFrames, AnimatedSprite.Direction.Down,  8f);
 
-            List<Rectangle> backFrames = new List<Rectangle> { new Rectangle(12, 164, 24, 26),
-                                                           new Rectangle(60, 166, 24, 24),
-                                                           new Rectangle(108, 164, 24, 26),
-                                                           new Rectangle(156, 166 , 24, 24)};
-            mataMouse.LoadFrames(backFrames, AnimatedSprite.Direction.Up, 4f);
+            List<Rectangle> backFrames = new List<Rectangle> { new Rectangle(12, 164, 24, 24),
+                                                           new Rectangle(60, 166, 24, 22),
+                                                           new Rectangle(108, 164, 24, 24),
+                                                           new Rectangle(156, 166 , 24, 22)};
+            mataMouse.LoadFrames(backFrames, AnimatedSprite.Direction.Up, 8f);
 
-            List<Rectangle> rightFrames = new List<Rectangle> { new Rectangle(4, 118, 38, 24),
-                                                           new Rectangle(54, 118, 38, 24),
-                                                           new Rectangle(100, 118, 38, 24),
-                                                           new Rectangle(150, 118 , 38, 24)};
-            mataMouse.LoadFrames(rightFrames, AnimatedSprite.Direction.Right, 4f);
+            List<Rectangle> rightFrames = new List<Rectangle> { new Rectangle(4, 118, 38, 22),
+                                                           new Rectangle(54, 118, 38, 22),
+                                                           new Rectangle(100, 118, 38, 22),
+                                                           new Rectangle(150, 118 , 38, 22)};
+            mataMouse.LoadFrames(rightFrames, AnimatedSprite.Direction.Right, 8f);
 
             List<Rectangle> leftFrames = new List<Rectangle> { new Rectangle(6, 70, 38, 24),
                                                            new Rectangle(52, 70, 38, 24),
                                                            new Rectangle(102, 70, 38, 24),
                                                            new Rectangle(148, 70 , 38, 24)};
-            mataMouse.LoadFrames(leftFrames, AnimatedSprite.Direction.Left, 4f);
+            mataMouse.LoadFrames(leftFrames, AnimatedSprite.Direction.Left, 8f);
 
 
             graphics.PreferredBackBufferHeight = MazeTexture.Height - 100;
