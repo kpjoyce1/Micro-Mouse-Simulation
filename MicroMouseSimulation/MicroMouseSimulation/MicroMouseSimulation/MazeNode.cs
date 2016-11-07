@@ -70,6 +70,30 @@ namespace MicroMouseSimulation
             set { _scanValue = value; }
         }
 
+        private float g;
+
+        public float G
+        {
+            get { return g; }
+            set { g = value; }
+        }
+
+        private float h;
+
+        public float H
+        {
+            get { return h; }
+            set { h = value; }
+        }
+
+        private float f;
+
+        public float F
+        {
+            get { return f; }
+            set { f = value; }
+        }
+
 
         private Color _color;
 
@@ -79,24 +103,52 @@ namespace MicroMouseSimulation
             set { _color = value; }
         }
 
+        private Stack<MazeNode> _edgeStack;
+
+        public Stack<MazeNode> EdgeStack
+        {
+            get { return _edgeStack; }
+            set { _edgeStack = value; }
+        }
+
+        private MazeNode pathParent;
+
+        public MazeNode PathParent
+        {
+            get { return pathParent; }
+            set { pathParent = value; }
+        }
+        private bool pathFlag;
+
+        public bool PathFlag
+        {
+            get { return pathFlag; }
+            set { pathFlag = value; }
+        }
+
+
 
         public  MazeNode(Vector2 location)
         {
             _distance = -1;
             _mark = false;        
             _location = location;
-            _color = Color.Red;         
+            _color = Color.Red;
+            _edgeStack = new Stack<MazeNode>();
         }
 
         public void Draw(SpriteBatch spriteBatch)
         {                                    
             spriteBatch.Draw(Game1.pixel, MazeGraph.toScreenCoordinates(_location), null, _color, 0f, Vector2.Zero, 4f, SpriteEffects.None, 1f);
 
+           // spriteBatch.DrawString(Game1.font, ScanValue.ToString(), new Vector2(0, -5) + _location * Game1.MapUnit + _location * 8f + Vector2.One * (30 + 6), Color.Red, 0f, Vector2.Zero,
+           //                             1f, SpriteEffects.None, 1f);
             if (_edgeHead != null)
             {
                 MazeEdge edge = _edgeHead;
                 while (edge != null)
                 {
+                    
                     if (edge.Target.Location.X - _location.X >= 0 && edge.Target.Location.Y - _location.Y >= 0)
                     {
                         spriteBatch.Draw(Game1.pixel, _location * Game1.MapUnit + _location * 8f + Vector2.One * (30 + 6), null, Color.Red, 0f, Vector2.Zero,

@@ -7,7 +7,7 @@
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Users\User\Documents\Micro-Mouse-Simulation\MicroMouseSimulation\MicroMouseSimulation\MicroMouseSimulation\bin\x86\Debug\Content\Maze2.xnb</Output>
+      <Output>C:\Users\User\Documents\VS Projects\Micro-Mouse-Simulation\MicroMouseSimulation\MicroMouseSimulation\MicroMouseSimulation\bin\x86\Debug\Content\Maze2.xnb</Output>
       <Time>2016-03-08T16:52:35.6688962-08:00</Time>
     </Item>
     <Item>
@@ -16,7 +16,7 @@
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Users\User\Documents\Micro-Mouse-Simulation\MicroMouseSimulation\MicroMouseSimulation\MicroMouseSimulation\bin\x86\Debug\Content\Maze.xnb</Output>
+      <Output>C:\Users\User\Documents\VS Projects\Micro-Mouse-Simulation\MicroMouseSimulation\MicroMouseSimulation\MicroMouseSimulation\bin\x86\Debug\Content\Maze.xnb</Output>
       <Time>2016-03-08T16:52:35.6639181-08:00</Time>
     </Item>
     <Item>
@@ -25,20 +25,29 @@
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
       <Options>None</Options>
-      <Output>C:\Users\User\Documents\Micro-Mouse-Simulation\MicroMouseSimulation\MicroMouseSimulation\MicroMouseSimulation\bin\x86\Debug\Content\MataMouse.xnb</Output>
+      <Output>C:\Users\User\Documents\VS Projects\Micro-Mouse-Simulation\MicroMouseSimulation\MicroMouseSimulation\MicroMouseSimulation\bin\x86\Debug\Content\MataMouse.xnb</Output>
       <Time>2016-03-11T18:35:05.5633632-08:00</Time>
+    </Item>
+    <Item>
+      <Source>SpriteFont1.spritefont</Source>
+      <Name>font</Name>
+      <Importer>FontDescriptionImporter</Importer>
+      <Processor>FontDescriptionProcessor</Processor>
+      <Options>None</Options>
+      <Output>C:\Users\User\Documents\VS Projects\Micro-Mouse-Simulation\MicroMouseSimulation\MicroMouseSimulation\MicroMouseSimulation\bin\x86\Debug\Content\font.xnb</Output>
+      <Time>2016-04-15T10:55:34.3884303-07:00</Time>
     </Item>
     <BuildSuccessful>true</BuildSuccessful>
     <Settings>
       <ContentProjectGUID>{24E79565-4148-4991-969E-93E5FEC131A3}</ContentProjectGUID>
       <TargetPlatform>Windows</TargetPlatform>
-      <TargetProfile>Reach</TargetProfile>
+      <TargetProfile>HiDef</TargetProfile>
       <BuildConfiguration>Debug</BuildConfiguration>
       <CompressContent>false</CompressContent>
-      <RootDirectory>C:\Users\User\Documents\Micro-Mouse-Simulation\MicroMouseSimulation\MicroMouseSimulation\MicroMouseSimulationContent\</RootDirectory>
-      <LoggerRootDirectory>C:\Users\User\Documents\Micro-Mouse-Simulation\MicroMouseSimulation\MicroMouseSimulation\MicroMouseSimulation\</LoggerRootDirectory>
-      <IntermediateDirectory>C:\Users\User\Documents\Micro-Mouse-Simulation\MicroMouseSimulation\MicroMouseSimulation\MicroMouseSimulation\obj\x86\Debug\</IntermediateDirectory>
-      <OutputDirectory>C:\Users\User\Documents\Micro-Mouse-Simulation\MicroMouseSimulation\MicroMouseSimulation\MicroMouseSimulation\bin\x86\Debug\Content\</OutputDirectory>
+      <RootDirectory>C:\Users\User\Documents\VS Projects\Micro-Mouse-Simulation\MicroMouseSimulation\MicroMouseSimulation\MicroMouseSimulationContent\</RootDirectory>
+      <LoggerRootDirectory>C:\Users\User\Documents\VS Projects\Micro-Mouse-Simulation\MicroMouseSimulation\MicroMouseSimulation\MicroMouseSimulation\</LoggerRootDirectory>
+      <IntermediateDirectory>C:\Users\User\Documents\VS Projects\Micro-Mouse-Simulation\MicroMouseSimulation\MicroMouseSimulation\MicroMouseSimulation\obj\x86\Debug\</IntermediateDirectory>
+      <OutputDirectory>C:\Users\User\Documents\VS Projects\Micro-Mouse-Simulation\MicroMouseSimulation\MicroMouseSimulation\MicroMouseSimulation\bin\x86\Debug\Content\</OutputDirectory>
     </Settings>
     <Assemblies>
       <Assembly>
@@ -66,8 +75,8 @@
         <Value>2011-09-01T17:22:30-07:00</Value>
       </Assembly>
       <Assembly>
-        <Key>C:\Windows\Microsoft.Net\assembly\GAC_32\Microsoft.Xna.Framework.Content.Pipeline\v4.0_4.0.0.0__842cf8be1de50553\Microsoft.Xna.Framework.Content.Pipeline.dll</Key>
-        <Value>2016-03-08T16:53:48.7140612-08:00</Value>
+        <Key>C:\WINDOWS\Microsoft.Net\assembly\GAC_32\Microsoft.Xna.Framework.Content.Pipeline\v4.0_4.0.0.0__842cf8be1de50553\Microsoft.Xna.Framework.Content.Pipeline.dll</Key>
+        <Value>2016-09-25T03:50:18.2922262-07:00</Value>
       </Assembly>
     </Assemblies>
   </Asset>

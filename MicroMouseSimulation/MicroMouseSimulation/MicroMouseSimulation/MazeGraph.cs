@@ -30,13 +30,59 @@ namespace MicroMouseSimulation
             set { _size = value; }
         }
 
+        private Stack<MazeNode> _scanStack;
+
+        public Stack<MazeNode> ScanStack
+        {
+            get { return _scanStack; }
+            set { _scanStack = value; }
+        }
+
+        private Queue<MazeNode> _scanQueue;
+
+        public Queue<MazeNode> ScanQueue
+        {
+            get { return _scanQueue; }
+            set { _scanQueue = value; }
+        }
+
+        private List<MazeNode> _scanOpenList;
+
+        public List<MazeNode> ScanOpenList
+        {
+            get { return _scanOpenList; }
+            set { _scanOpenList = value; }
+        }
+
+        private List<MazeNode> _scanCloseList;
+
+        public List<MazeNode> ScanCloseList
+        {
+            get { return _scanCloseList; }
+            set { _scanCloseList = value; }
+        }
+        
         public MazeGraph()
         {
+            _scanQueue = new Queue<MazeNode>();
+
+            _scanStack = new Stack<MazeNode>();
+
+            _scanOpenList = new List<MazeNode>();
+            _scanCloseList = new List<MazeNode>();
+
             _head = new MazeNode(new Vector2(0, 0));
-            Size++;   
+            Size++;
             MazeNode current = _head;
             _head.ScanValue = 14;
 
+            _scanStack.Push(_head);
+
+            _scanQueue.Enqueue(_head);
+
+            _head.F = 0;
+            _scanOpenList.Add(_head);
+            
             for (int x = 0; x < 16; x++)
             {
                 for (int y = 0; y < 16; y++)
@@ -44,7 +90,8 @@ namespace MicroMouseSimulation
                     if (x != 0 || y != 0)
                     {
                         MazeNode temp = new MazeNode(new Vector2(x, y));
-                        temp.ScanValue = Math.Abs(7 - x) +  Math.Abs(7 - y);                   
+                        temp.ScanValue = Math.Abs(7 - x) + Math.Abs(7 - y);
+                        
                         while (current.Next != null)
                         {
                             current = current.Next;
@@ -57,7 +104,7 @@ namespace MicroMouseSimulation
         }
 
         public MazeNode GetNode(Vector2 Location)
-        {
+        { 
             MazeNode current = _head;
             
             while(current.Next != null)
@@ -67,6 +114,10 @@ namespace MicroMouseSimulation
                     return current;
                 }
                 current = current.Next;
+                if (current.Location == Location)
+                {
+                    return current;
+                }
             }
 
             return null;   
@@ -84,20 +135,24 @@ namespace MicroMouseSimulation
                 }
                 current = current.Next;
             }
-                MazeNode connected = _head;
+            MazeNode connected = _head;
 
-                while (connected.Next != null)
+            while (connected.Next != null)
+            {
+                if (connected.Location == connectedLocation)
                 {
-                    if (connected.Location == connectedLocation)
-                    {
-                        break;
-                    }
-                    connected = connected.Next;
+                    break;
                 }
+                connected = connected.Next;
+            }
 
+            if (!current.EdgeStack.Contains(connected))
+            {
                 if (current.EdgeHead == null)
                 {
-                    current.EdgeHead = new MazeEdge(connected);
+                    MazeEdge temp = new MazeEdge(connected);
+                    current.EdgeHead = temp;
+                    current.EdgeStack.Push(temp.Target);
                 }
                 else
                 {
@@ -105,7 +160,7 @@ namespace MicroMouseSimulation
 
                     while (tempEdge.Next != null)
                     {
-                        if(tempEdge.Target.Location == connectedLocation) // already in edgelist
+                        if (tempEdge.Target.Location == connectedLocation) // already in edgelist
                         {
                             return;
                         }
@@ -113,13 +168,92 @@ namespace MicroMouseSimulation
                     }
 
                     tempEdge.Next = new MazeEdge(connected);
+                    current.EdgeStack.Push(tempEdge.Next.Target);
 
                 }
-
+            }
         }
 
+        public void ChangeScanValues(Vector2 position)
+        {
+            MazeNode temp = _head;
+            MazeNode curr = _head;
+            while(temp != null)
+            {
+                if(temp.Location == MazeGraph.toMazeCoorinates(position))
+                {
+                    curr = temp;
+                }
+                temp.ScanValue =(int) (Math.Abs(temp.Location.X) + Math.Abs(temp.Location.Y));
 
-        public MazeNode [] shortestPath(Vector2 source, Vector2 destination)
+                temp = temp.Next;
+            }
+            _scanCloseList.Clear();
+            _scanOpenList.Clear();
+            curr.F = 0;
+            _scanOpenList.Add(curr);
+        }
+
+        public void ClearPathFlag()
+        {
+            MazeNode temp = _head;
+            while (temp != null)
+            {
+                temp.PathFlag = false;
+                temp = temp.Next;
+            }
+        }
+
+        public Stack<MazeNode> getAPath(Vector2 source, Vector2 destination)
+        {
+            ClearPathFlag();
+            MazeNode temp = _head;
+            while(temp != null)
+            {
+                if(temp.Location == source)
+                {
+                    break;
+                }
+                temp = temp.Next;
+
+            }
+
+            Queue<MazeNode> q = new Queue<MazeNode>();
+
+            q.Enqueue(temp);
+            while(q.Count != 0)
+            {
+                MazeNode t = q.Dequeue();
+                t.PathFlag = true;
+                if (t.Location == destination)
+                {
+                    q.Clear();
+                    q.Enqueue(t);
+                    break;
+                }
+                foreach (var e in t.EdgeStack)
+                {
+                    if(!e.PathFlag)
+                    { 
+                        e.PathFlag = true;
+                        e.PathParent = t;
+                        q.Enqueue(e);
+                    }
+                }
+            }
+
+
+            MazeNode dest = q.Dequeue();
+            Stack<MazeNode> path = new Stack<MazeNode>();
+            while (dest.Location != source)
+            {
+                path.Push(dest);
+                dest = dest.PathParent;
+            }
+            
+            return path;
+        }
+        public Stack<MazeNode> shortestPath(Vector2 source, Vector2 destination)
         {
             //Dijkstra's Algorithm
             /*
@@ -158,6 +292,11 @@ namespace MicroMouseSimulation
                 MazeNode minNode = minDistance(UnivisitedNodes);
                 UnivisitedNodes.Remove(minNode);
 
+                if (minNode.Location == destination)
+                {
+                    break;
+                }
+
                 MazeEdge edge = minNode.EdgeHead;
 
                 while(edge != null)
@@ -184,15 +323,16 @@ namespace MicroMouseSimulation
             }
 
             //create PathStack
-            List<MazeNode> PathStack = new List<MazeNode>();
+            Stack<MazeNode> PathStack = new Stack<MazeNode>();
 
             while (current != null)
             {
                 current.Color = Color.White;
+                PathStack.Push(current);
                 current = current.Parent;
             }            
 
-            return PathStack.ToArray();
+            return PathStack;
 
         }
 
@@ -210,33 +350,125 @@ namespace MicroMouseSimulation
 
             return minNode;
         }
-       
-        public Vector2 nextNodeInScan(Vector2 currentLocation)
+
+        public Vector2 nextNodeInScanDepthFirst(Bot bot)
         {
-            MazeNode current = _head;
 
-            while (current.Next != null)
+            MazeNode current;
+            current = _scanStack.Pop();
+            current.Mark = true;
+
+            MazeEdge e = current.EdgeHead;
+            while (e != null)
             {
-                if (current.Location == currentLocation)
+                if (!e.Target.Mark)
                 {
-                    break;
+                    if(!_scanStack.Contains(e.Target))
+                        _scanStack.Push(e.Target);
                 }
-                current = current.Next;
+                e = e.Next;
             }
 
-            MazeEdge edge = current.EdgeHead;
+            return _scanStack.Peek().Location;
 
-            while(edge != null)
+        }
+
+        public Vector2 nextNodeInScanBreadthFirst(Bot bot)
+        {
+
+            MazeNode current;
+            current = _scanQueue.Dequeue();
+
+            if (!current.Mark)
             {
-                if(edge.Target.ScanValue <= current.ScanValue)
+                MazeEdge e = current.EdgeHead;
+                while (e != null)
                 {
-                    return edge.Target.Location;
+                    if (!e.Target.Mark)
+                    {
+                        if (!_scanQueue.Contains(e.Target))
+                        {
+                            _scanQueue.Enqueue(e.Target);
+                        }
+                    }
+                    else
+                    {
+                        ;
+                    }
+                    e = e.Next;
                 }
-                edge = edge.Next;
+                current.Mark = true;
             }
 
-            return Vector2.One * -1f;
+            return _scanQueue.Peek().Location;
 
+        }
+
+        public Vector2 nextNodeInFloodFill(Bot bot)
+        {
+            /*
+
+             */
+            MazeNode q = _scanOpenList[0];
+            if(q.ScanValue < 1)
+            {
+                return q.Location;
+            }
+            _scanOpenList.RemoveAt(0);
+
+            foreach (var e in q.EdgeStack)
+            {
+                float g = q.G + 1;
+                bool skip = false;
+                if(_scanOpenList.Contains(e))
+                {
+                    //skip
+                    skip = true;
+                }
+                else if(_scanCloseList.Contains(e))
+                {
+                    if (e.G < g)
+                    {
+                        //skip
+                        skip = true;
+                    }
+                    else
+                    {
+                        _scanCloseList.Add(e);
+                        _scanOpenList.Remove(e);
+                    }
+                }
+                else
+                {
+                    _scanOpenList.Add(e);
+                }
+                if(!skip)
+                {
+                    e.G = g;
+                    e.Parent = q;
+                }
+                
+            }
+            _scanCloseList.Add(q);
+
+            for (int i = 0; i < _scanOpenList.Count; i++)
+            {
+                int index = i;
+                for (int j = i; j < _scanOpenList.Count; j++)
+                {
+                    if(Vector2.Distance(_scanOpenList[index].Location, new Vector2(7, 7)) * 1.0 +  Math.Pow(Vector2.Distance(q.Location, _scanOpenList[index].Location), 2)  >
+                       Vector2.Distance(_scanOpenList[j].Location, new Vector2(7, 7)) * 1.0 + Math.Pow(Vector2.Distance(_scanOpenList[j].Location, q.Location), 2))          
+                    {
+                        index = j;
+                    }
+                }
+                var temp = _scanOpenList[i];
+                _scanOpenList[i] = _scanOpenList[index];
+                _scanOpenList[index] = temp;
+
+            }
+
+            return _scanOpenList[0].Location;
         }
 
         public static Vector2 toMazeCoorinates(Vector2 Position)

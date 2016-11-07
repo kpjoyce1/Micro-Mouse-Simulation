@@ -12,17 +12,20 @@ using Microsoft.Xna.Framework.Media;
 
 namespace MicroMouseSimulation 
 {
+
     class Bot : AnimatedSprite
     {
-        enum Status
+        public enum Status
         {
             Scanning,
             Returning,
             Calculating,
+            Done,
             SpeedRun
         }
 
         private Status _status;
+        public Status Stat { get { return _status; } set { _status = value; } }
 
         private Vector2 _velocity;
 
@@ -72,9 +75,9 @@ namespace MicroMouseSimulation
             set { _mazePosition = value; }
         }
 
-        private MazeNode[] _shortestPath;
+        private Stack<MazeNode> _shortestPath;
 
-        public MazeNode[] ShortestPath
+        public Stack<MazeNode> ShortestPath
         {
             get { return _shortestPath; }
             set { _shortestPath = value; }
@@ -90,12 +93,12 @@ namespace MicroMouseSimulation
 
         public Bot(Texture2D image, Vector2 position, Color tint,
                     float rotation, Vector2 origin, Vector2 scale)
-            : base(image, position, tint, rotation, origin, scale)        
+            : base(image, position, tint, rotation, origin, scale)
         {
             _status = Status.Scanning;
             _direction = Direction.Down;
             _mazeData = new MazeGraph();
-
+            _wayPoint = Vector2.One * -1f;
             _layer = 0.01f;
         }
 
@@ -105,10 +108,12 @@ namespace MicroMouseSimulation
         bool topBlocked;
         bool bottomBlocked;
 
-        bool rightWall;
-        bool leftWall;
-        bool topWall;
-        bool bottomWall;
+        public bool RightWall;
+        public bool LeftWall;
+        public bool TopWall;
+        public bool BottomWall;
+        public bool enroute = false;
+        public bool nextStep = true;
 
         public void Update(GameTime gameTime, KeyboardState ks, KeyboardState lastks, Color[,] PixelMap)
         {
@@ -118,7 +123,7 @@ namespace MicroMouseSimulation
             _height = _frame.Height;
 
             _origin = new Vector2(_width / 2, _height / 2);
-            
+
             //MazePosition is relative coordinate system
             _mazePosition = MazeGraph.toMazeCoorinates(_position);
 
@@ -126,34 +131,29 @@ namespace MicroMouseSimulation
             PixelDetect(PixelMap);
 
             //Added Edges to graph
-            if (!rightWall)
+            if (!RightWall)
             {
                 _mazeData.AddEdge(_mazePosition, _mazePosition + new Vector2(1, 0));
-                _mazeData.AddEdge( _mazePosition + new Vector2(1, 0), _mazePosition);
+                _mazeData.AddEdge(_mazePosition + new Vector2(1, 0), _mazePosition);
             }
-
-            if (!leftWall)
+            if (!LeftWall)
             {
                 _mazeData.AddEdge(_mazePosition, _mazePosition - new Vector2(1, 0));
                 _mazeData.AddEdge(_mazePosition - new Vector2(1, 0), _mazePosition);
             }
 
-            if (!topWall)
+            if (!TopWall)
             {
                 _mazeData.AddEdge(_mazePosition, _mazePosition - new Vector2(0, 1));
                 _mazeData.AddEdge(_mazePosition - new Vector2(0, 1), _mazePosition);
             }
 
-            if (!bottomWall)
+            if (!BottomWall)
             {
                 _mazeData.AddEdge(_mazePosition, _mazePosition + new Vector2(0, 1));
                 _mazeData.AddEdge(_mazePosition + new Vector2(0, 1), _mazePosition);
-            }         
-
-            if(ks.IsKeyDown(Keys.K) && lastks.IsKeyUp(Keys.K))
-            {
-                _wayPoint = _mazeData.nextNodeInScan(_mazePosition);
             }
+
 
             if (ks.IsKeyDown(Keys.L) && lastks.IsKeyUp(Keys.L))
             {
@@ -200,10 +200,81 @@ namespace MicroMouseSimulation
                 }
             }
 
+            if ( !enroute && ks.IsKeyDown(Keys.K) && lastks.IsKeyUp(Keys.K))
+            {
+                _wayPoint = _mazeData.nextNodeInScanDepthFirst(this);
+                enroute = true;
+                _shortestPath = _mazeData.getAPath(MazeGraph.toMazeCoorinates(_position), _wayPoint);
+                _wayPoint = _shortestPath.Pop().Location;
+            }
+            else if(nextStep)
+            {
+                if (_status == Status.Scanning && _mazeData.GetNode(MazeGraph.toMazeCoorinates(Position)).ScanValue <= 1)
+                {
+                    _status = Status.Returning;
+                    _mazeData.ChangeScanValues(MazeGraph.toMazeCoorinates(_position));
+                    enroute = true;
+                }
+                else if (_status == Status.Returning && _mazeData.GetNode(MazeGraph.toMazeCoorinates(Position)).ScanValue <= 1)
+                {
+                    _status = Status.Calculating;
+                    _shortestPath = _mazeData.shortestPath(MazeGraph.toMazeCoorinates(_position), new Vector2(7, 7));
+
+                }
+                else if(_status == Status.Calculating && MazeGraph.toMazeCoorinates(_position) == 7f*Vector2.One)
+                {
+                    _status = Status.Done;
+                }
+                if (_status == Status.Scanning)
+                {
+                    _wayPoint = _mazeData.nextNodeInScanDepthFirst(this);
+                    enroute = true;
+                    _shortestPath = _mazeData.getAPath(MazeGraph.toMazeCoorinates(_position), _wayPoint);
+                    _wayPoint = _shortestPath.Pop().Location;
+                    nextStep = false;
+                }
+                else if(_status == Status.Returning)
+                {
+                    _wayPoint = _mazeData.nextNodeInScanDepthFirst(this);
+                    enroute = true;
+                    _shortestPath = _mazeData.getAPath(MazeGraph.toMazeCoorinates(_position), _wayPoint);
+                    _wayPoint = _shortestPath.Pop().Location;
+                    nextStep = false;
+                }
+                else if(_status == Status.Calculating)
+                {
+                    _wayPoint = _shortestPath.Pop().Location;
+                    nextStep = false;
+                    enroute = true;
+                }
+
+            }
+
+
+
+            if (enroute)
+            {
+
+                if (Vector2.Distance(MazeGraph.toScreenCoordinates(_wayPoint), Position) < 1 && _shortestPath.Count == 0)
+                {
+                    enroute = false;
+                    nextStep = true;
+
+                }
+                else if (Vector2.Distance(MazeGraph.toScreenCoordinates(_wayPoint), Position) < 1 && _shortestPath.Count != 0)
+                {
+                    _wayPoint = _shortestPath.Pop().Location;
+                }
+                else
+                {
+                    MoveToGridPosition(_wayPoint);
+                }
+            }
+
 
         }
 
-        public override  void Draw(SpriteBatch spriteBatch)
+        public override void Draw(SpriteBatch spriteBatch)
         {
             base.Draw(spriteBatch);
             _mazeData.Draw(spriteBatch);
@@ -213,6 +284,18 @@ namespace MicroMouseSimulation
         {
 
 
+        }
+
+        public void MoveToGridPosition(Vector2 GridPosition)
+        {
+            if (Position != MazeGraph.toScreenCoordinates(GridPosition))
+            {
+                Vector2 deltaPosition = ((MazeGraph.toScreenCoordinates(GridPosition)) - Position);
+                deltaPosition.Normalize();
+                Position += deltaPosition;
+                Position = MazeGraph.toScreenCoordinates(GridPosition);
+            }
+            //Position = MazeGraph.toScreenCoordinates(GridPosition);  
         }
 
         public void PixelDetect(Color[,] PixelMap)
@@ -225,16 +308,16 @@ namespace MicroMouseSimulation
             topBlocked = false;
             bottomBlocked = false;
 
-            leftWall = false;
-            rightWall = false;
-            topWall = false;
-            bottomWall = false;
+            LeftWall = false;
+            RightWall = false;
+            TopWall = false;
+            BottomWall = false;
 
             for (int currDistance = 1; currDistance < sensorDistance; currDistance++) //simulate a sensor 
             {
                 if ((_position.X - _width / 2) - currDistance < 0)
                 {
-                    leftWall = true;
+                    LeftWall = true;
                     if (currDistance < bodyCollisionDistance)
                     {
                         leftBlocked = true;
@@ -244,7 +327,7 @@ namespace MicroMouseSimulation
                 {
                     if (PixelMap[(int)(_position.X - _width / 2) - currDistance, (int)(_position.Y)].A != 0 || PixelMap[(int)(_position.X - _width / 2) - currDistance, (int)(_position.Y - _height / 2)].A != 0 || PixelMap[(int)(_position.X - _width / 2) - currDistance, (int)(_position.Y + _height / 2)].A != 0)
                     {
-                        leftWall = true;
+                        LeftWall = true;
                         if (currDistance < bodyCollisionDistance)
                         {
                             leftBlocked = true;
@@ -254,7 +337,7 @@ namespace MicroMouseSimulation
 
                 if ((_position.X + _width / 2) + currDistance >= Game1.MapWidth)
                 {
-                    rightWall = true;
+                    RightWall = true;
                     if (currDistance < bodyCollisionDistance)
                     {
                         rightBlocked = true;
@@ -264,7 +347,7 @@ namespace MicroMouseSimulation
                 {
                     if (PixelMap[(int)(_position.X + _width / 2) + currDistance, (int)(_position.Y)].A != 0 || PixelMap[(int)(_position.X + _width / 2) + currDistance, (int)(_position.Y - _height / 2)].A != 0 || PixelMap[(int)(_position.X + _width / 2) + currDistance, (int)(_position.Y + _height / 2)].A != 0)
                     {
-                        rightWall = true;
+                        RightWall = true;
                         if (currDistance < bodyCollisionDistance)
                         {
                             rightBlocked = true;
@@ -278,13 +361,13 @@ namespace MicroMouseSimulation
                     {
                         topBlocked = true;
                     }
-                    topWall = true;
+                    TopWall = true;
                 }
                 else
                 {
                     if (PixelMap[(int)(_position.X), (int)(_position.Y - _height / 2) - currDistance].A != 0 || PixelMap[(int)(_position.X - _width / 2), (int)(_position.Y - _height / 2) - currDistance].A != 0 || PixelMap[(int)(_position.X + _width / 2), (int)(_position.Y - _height / 2) - currDistance].A != 0)
                     {
-                        topWall = true;
+                        TopWall = true;
                         if (currDistance < bodyCollisionDistance)
                         {
                             topBlocked = true;
@@ -298,13 +381,13 @@ namespace MicroMouseSimulation
                     {
                         bottomBlocked = true;
                     }
-                    bottomWall = true;
+                    BottomWall = true;
                 }
                 else
                 {
                     if (PixelMap[(int)(_position.X), (int)(_position.Y + _height / 2) + currDistance].A != 0 || PixelMap[(int)(_position.X - _width / 2), (int)(_position.Y + _height / 2) + currDistance].A != 0 || PixelMap[(int)(_position.X + _width / 2), (int)(_position.Y + _height / 2) + currDistance].A != 0)
                     {
-                        bottomWall = true;
+                        BottomWall = true;
                         if (currDistance < bodyCollisionDistance)
                         {
                             bottomBlocked = true;

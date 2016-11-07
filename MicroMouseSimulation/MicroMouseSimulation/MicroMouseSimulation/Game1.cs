@@ -17,10 +17,13 @@ namespace MicroMouseSimulation
     {
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
-
+        Random gen = new Random();
+        public static SpriteFont font;
         Texture2D MazeTexture;
         Color[,] PixelMap;
         Color[] Colors;
+
+        TimeSpan timer;
 
         Bot mataMouse;
         KeyboardState ks, lastks;
@@ -50,7 +53,10 @@ namespace MicroMouseSimulation
         protected override void LoadContent()
         {
             
+
             spriteBatch = new SpriteBatch(GraphicsDevice);
+
+            font = Content.Load<SpriteFont>("font");
 
             MazeTexture = Content.Load<Texture2D>("Maze");
             MapHeight = MazeTexture.Height;
@@ -104,6 +110,8 @@ namespace MicroMouseSimulation
             graphics.PreferredBackBufferWidth = MazeTexture.Width;
             graphics.ApplyChanges();
 
+            mataMouse.Stat = Bot.Status.Done;
+
         }
 
         protected override void UnloadContent()
@@ -126,8 +134,18 @@ namespace MicroMouseSimulation
                 mataMouse.Update(gameTime, ks, lastks, PixelMap);
                 robotUpdate = TimeSpan.Zero;
             }
+
+            if(mataMouse.Stat != Bot.Status.Done)
+            {
+                timer += gameTime.ElapsedGameTime;
+            }
             base.Update(gameTime);
             lastks = ks;
+
+            if(ks.IsKeyDown(Keys.P))
+            {
+                mataMouse.Stat = Bot.Status.Scanning;
+            }
         }
         
         protected override void Draw(GameTime gameTime)
@@ -135,8 +153,9 @@ namespace MicroMouseSimulation
             GraphicsDevice.Clear(Color.Black);
 
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend);
-            spriteBatch.Draw(MazeTexture, Vector2.Zero, Color.White);
-            mataMouse.Draw(spriteBatch);       
+            spriteBatch.Draw(MazeTexture, Vector2.Zero, null, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 1f);
+            mataMouse.Draw(spriteBatch);
+            spriteBatch.DrawString(font, timer.ToString(), Vector2.Zero, Color.White);
             spriteBatch.End();
 
             base.Draw(gameTime);
